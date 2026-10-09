@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"mime"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -29,8 +30,10 @@ func TestAttestationRoutes(t *testing.T) {
 			if rec.Code != tt.wantStatus {
 				t.Fatalf("status = %d, want %d: %s", rec.Code, tt.wantStatus, rec.Body.String())
 			}
-			if got := rec.Header().Get("Content-Type"); got != "application/json" {
-				t.Errorf("Content-Type = %q, want application/json", got)
+			contentType := rec.Header().Get("Content-Type")
+			mediaType, _, err := mime.ParseMediaType(contentType)
+			if err != nil || mediaType != "application/json" {
+				t.Errorf("Content-Type = %q, want application/json (err: %v)", contentType, err)
 			}
 			var body map[string]any
 			if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
